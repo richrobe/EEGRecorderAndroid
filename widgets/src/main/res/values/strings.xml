@@ -1,0 +1,47 @@
+<resources>
+    <string name="app_name">DailyHeartProgressBar</string>
+
+
+    <!-- Circular progress bar -->
+    <string name="string_heart">Heart</string>
+
+
+    <!-- Status bar -->
+    <string name="status_bar_disconnected">MUSE disconnected</string>
+    <string name="status_bar_connecting">MUSE connecting</string>
+    <string name="status_bar_connected">MUSE connected</string>
+    <string name="status_bar_simulating">MUSE simulating</string>
+
+
+    <!-- Heart Status Card View -->
+    <string name="heart_status_ok">OK</string>
+    <string name="heart_status_high">HIGH</string>
+    <string name="heart_status_high_long">HR TOO HIGH!</string>
+    <string name="heart_status_low">LOW</string>
+    <string name="heart_status_low_long">HR TOO LOW!</string>
+    <string name="heart_status_arr">ARR</string>
+    <string name="heart_status_arr_long">ARRHYTHMIA</string>
+    <!-- Content description -->
+    <string name="string_heart_status">Heart Status</string>
+
+
+    <!-- Main Menu Card View -->
+    <!-- Content description -->
+    <string name="string_icon">Icon</string>
+
+
+    <!-- Record Types -->
+    <string name="record_type_current_hr">Current Heart Rate</string>
+    <string name="record_type_analyze_ecg">Analyze ECG</string>
+    <string name="record_type_monitor_ecg">Monitor ECG</string>
+    <string name="record_type_track_training">Track Training</string>
+    <string name="record_type_analyze_hrv">Analyze HRV</string>
+    <!-- Content description -->
+    <string name="string_record_type">Record Type</string>
+
+
+    <!-- DailyHeart Icon View -->
+    <string name="placeholder_value">%1$s</string>
+    <string name="placeholder_unit">%1$s</string>
+
+</resources>

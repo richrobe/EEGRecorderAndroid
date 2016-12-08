@@ -1,0 +1,5 @@
+include ':app', ':sensorlib', ':sls-muse', ':widgets', ':plotview'
+
+project(':sensorlib').projectDir = new File('../sensorlib/SensorLib/sensorlib')
+project(':sls-muse').projectDir = new File('../sensorlib/SensorLib/sls-muse')
+

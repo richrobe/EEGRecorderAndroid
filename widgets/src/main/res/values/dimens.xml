@@ -1,0 +1,10 @@
+<resources>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="margin_horizontal">8dp</dimen>
+    <dimen name="margin_vertical">8dp</dimen>
+    <dimen name="margin_vertical_between">4dp</dimen>
+
+    <dimen name="height_main_menu_card">100dp</dimen>
+    <dimen name="height_record_type_card">50dp</dimen>
+
+</resources>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="colorPrimary">#607D8B</color>
+    <color name="colorPrimaryDark">#455A64</color>
+    <color name="colorPrimaryDarkest">#263238</color>
+    <color name="colorAccent">#FF9100</color>
+    <color name="colorAccentDark">#FF6D00</color>
+
+    <color name="grey_800">#424242</color>
+    <color name="grey_100">#F5F5F5</color>
+    <color name="grey_50">#FAFAFA</color>
+    <color name="button_pause_color">#FFC107</color>
+    <color name="button_stop_color">#D32F2F</color>
+    <color name="color_on_off">#D32F2F</color>
+
+</resources>

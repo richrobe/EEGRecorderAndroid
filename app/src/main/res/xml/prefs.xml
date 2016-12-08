@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="@string/pref_category_streaming">
+
+        <CheckBoxPreference
+            android:checked="true"
+            android:key="@string/pref_enable_streaming"
+            android:summary="@string/pref_summary_enable_streaming"
+            android:title="@string/pref_title_streaming" />
+
+        <EditTextPreference
+            android:defaultValue="127.0.0.1"
+            android:enabled="true"
+            android:key="@string/pref_address"
+            android:summary="@string/pref_summary_address"
+            android:title="@string/pref_title_address" />
+
+        <EditTextPreference
+            android:defaultValue="5000"
+            android:enabled="true"
+            android:key="@string/pref_port"
+            android:numeric="signed"
+            android:summary="@string/pref_summary_port"
+            android:title="@string/pref_title_port" />
+
+    </PreferenceCategory>
+
+
+</PreferenceScreen>

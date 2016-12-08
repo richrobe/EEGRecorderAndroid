@@ -1,0 +1,40 @@
+<resources>
+    <string name="app_name">MAControl</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="title_activity_scene_space">Scene Space</string>
+    <string name="title_activity_main">Main Menu</string>
+    <string name="title_activity_scene_gallery">Scene Gallery</string>
+
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="string_scene_space">Scene Space</string>
+    <string name="string_scene_gallery">Scene Gallery</string>
+    <string name="string_muse">Muse Recording</string>
+    <string name="placeholder_current_scene">
+        <![CDATA[
+          Current Scene:\n <b>%1$s</b>
+         ]]>
+        </string>
+    <string name="button_pause">Pause</string>
+    <string name="button_stop">Stop</string>
+    <string name="string_fab">FAB</string>
+    <string name="button_resume">Resume</string>
+    <string name="title_activity_muse_data">Muse Recording</string>
+    <string name="placeholder_total_blinks">%1$d</string>
+    <string name="placeholder_blink_rate">%1$s / min</string>
+
+
+    <string name="pref_category_streaming">Streaming Settings</string>
+    <string name="pref_summary_enable_streaming">Enable/disable data streaming over the network</string>
+    <string name="pref_title_streaming">Streaming</string>
+    <string name="pref_summary_address">IP address or host name of the server receiving the data (current: %1$s)</string>
+    <string name="pref_title_address">Server address</string>
+    <string name="pref_title_port">Port</string>
+    <string name="pref_summary_port">Server port (current: %1$s)</string>
+    <string name="pref_enable_streaming">pref_enable_streaming</string>
+    <string name="pref_address">pref_address</string>
+    <string name="pref_port">pref_hello</string>
+
+</resources>

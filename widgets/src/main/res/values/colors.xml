@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="white">#FFFFFF</color>
+    <color name="primary_darkest">#01579B</color>
+
+    <!-- Circular progress bar colors -->
+    <color name="progress_color">#f50057</color>
+    <color name="progress_color_background">#E0E0E0</color>
+    <color name="progress_color_finished">#259b24</color>
+
+    <!-- Status bar colors -->
+    <color name="status_bar_disconnected">#F44336</color>
+    <color name="status_bar_connecting">#FF9800</color>
+    <color name="status_bar_connected">#4CAF50</color>
+    <color name="status_bar_simulating">#03A9F4</color>
+
+
+    <!-- Heart status colors -->
+    <color name="heart_status_background_color_ok">#C8E6C9</color>
+    <color name="heart_status_text_color_ok">#388E3C</color>
+    <color name="heart_status_background_color_too_high">#FFCDD2</color>
+    <color name="heart_status_text_color_too_high">#D32F2F</color>
+    <color name="heart_status_background_color_too_low">#C5CAE9</color>
+    <color name="heart_status_text_color_too_low">#303F9F</color>
+    <color name="heart_status_background_color_arrhythmia">#D1C4E9</color>
+    <color name="heart_status_text_color_arrhythmia">#512DA8</color>
+</resources>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center">
+
+    <ImageView
+        android:id="@+id/iv_heart"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_centerInParent="true"
+        android:contentDescription="@string/string_heart"
+        android:src="@drawable/img_heart_pulsating" />
+
+    <view
+        android:id="@+id/progressbar_circular"
+        class="de.fau.lme.dailyheartwidgets.DailyHeartProgressBar$CircularProgressBar"
+        android:layout_width="240dp"
+        android:layout_height="240dp"
+        android:layout_centerInParent="true" />
+
+    <TextView
+        android:id="@+id/tv_heart_rate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:fontFamily="sans-serif-light"
+        android:gravity="center_horizontal"
+        android:paddingBottom="10dp"
+        android:textAlignment="center"
+        android:textColor="@color/white"
+        android:textSize="30sp"
+        android:textStyle="bold" />
+
+</RelativeLayout>

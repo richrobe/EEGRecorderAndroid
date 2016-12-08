@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--<attr name="image" format="reference" />-->
+
+    <declare-styleable name="DailyHeartProgressBar">
+        <attr name="stroke_width" format="dimension" />
+        <attr name="progress" format="float" />
+        <attr name="marker_progress" format="float" />
+        <attr name="progress_color" format="color" />
+        <attr name="progress_background_color" format="color" />
+        <attr name="thumb_visible" format="boolean" />
+        <attr name="marker_visible" format="boolean" />
+        <attr name="android:gravity" />
+    </declare-styleable>
+
+    <attr name="DailyHeartProgressBar" format="reference" />
+
+    <declare-styleable name="StatusBar">
+        <attr name="status" format="enum">
+            <enum name="disconnected" value="0" />
+            <enum name="connecting" value="1" />
+            <enum name="connected" value="2" />
+            <enum name="simulating" value="3" />
+            <enum name="unknown" value="4" />
+        </attr>
+    </declare-styleable>
+
+    <declare-styleable name="MainMenuCardView">
+        <attr name="titleText" format="string" />
+        <attr name="image" format="reference" />
+        <attr name="imageDescription" format="reference" />
+    </declare-styleable>
+
+    <declare-styleable name="HeartStatusCardView">
+        <attr name="heart_status" format="enum">
+            <enum name="unknown" value="0" />
+            <enum name="normal" value="1" />
+            <enum name="bradycardia" value="2" />
+            <enum name="tachycardia" value="3" />
+            <enum name="arrhythmia" value="4" />
+        </attr>
+    </declare-styleable>
+
+    <declare-styleable name="RecordTypeCardView">
+        <attr name="record_type" format="enum">
+            <enum name="unknown" value="0" />
+            <enum name="current_hr" value="1" />
+            <enum name="analyze_ecg" value="2" />
+            <enum name="monitor_ecg" value="3" />
+            <enum name="track_training" value="4" />
+            <enum name="analyze_hrv" value="5" />
+        </attr>
+    </declare-styleable>
+
+    <declare-styleable name="DailyHeartFeatureView">
+        <attr name="icon" format="reference" />
+        <attr name="value" format="string" />
+        <attr name="unit" format="string" />
+        <attr name="text_color" format="color" />
+        <attr name="num_columns" format="integer" />
+    </declare-styleable>
+
+</resources>

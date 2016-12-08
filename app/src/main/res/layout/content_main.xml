@@ -1,0 +1,26 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <include
+        android:id="@+id/header"
+        layout="@layout/app_bar_base" />
+
+    <GridView
+        android:id="@+id/grid_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/current_scene"
+        android:layout_below="@id/header"
+        android:layout_marginTop="@dimen/activity_vertical_margin"
+        android:layout_marginEnd="@dimen/activity_horizontal_margin"
+        android:layout_marginStart="@dimen/activity_horizontal_margin"
+        android:horizontalSpacing="@dimen/activity_horizontal_margin"
+        android:orientation="vertical"
+        android:verticalSpacing="@dimen/activity_vertical_margin" />
+
+    <include
+        android:id="@+id/current_scene"
+        layout="@layout/layout_widget_current_scene" />
+
+</RelativeLayout>
