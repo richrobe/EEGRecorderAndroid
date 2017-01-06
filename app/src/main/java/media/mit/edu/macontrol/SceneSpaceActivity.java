@@ -50,7 +50,7 @@ public class SceneSpaceActivity extends BaseActivity
             }
         });
 
-        webView.loadUrl("http://lightinglab.media.mit.edu:8888/SceneSpaceJS/scene_space.html");
+        webView.loadUrl("http://lightinglab.media.mit.edu:8888/UI/scene_space_visualizer.html");
         webView.requestFocusFromTouch();
     }
 
