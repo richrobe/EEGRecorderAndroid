@@ -1,4 +1,4 @@
-package media.mit.edu.macontrol;
+package media.mit.edu.macontrol.communication;
 
 import android.app.Service;
 import android.content.Intent;
@@ -12,12 +12,12 @@ import java.util.EnumSet;
 
 import de.fau.sensorlib.DsSensor;
 import de.fau.sensorlib.DsSensorManager;
-import de.fau.sensorlib.KnownSensor;
 import de.fau.sensorlib.SensorDataProcessor;
 import de.fau.sensorlib.SensorFoundCallback;
 import de.fau.sensorlib.SensorInfo;
 import de.fau.sensorlib.dataframe.SensorDataFrame;
 import de.fau.sensorlib.sensors.MuseSensor;
+import media.mit.edu.macontrol.SensorActivityCallback;
 
 public class BleService extends Service {
 

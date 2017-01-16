@@ -1,18 +1,19 @@
-package media.mit.edu.macontrol;
+package media.mit.edu.macontrol.ui;
 
 import android.app.ActivityOptions;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
-import android.text.Html;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 
-import media.mit.edu.macontrol.MainMenuCardView.MainMenuWrapper;
+import media.mit.edu.macontrol.communication.DownloadFileTask;
+import media.mit.edu.macontrol.ui.MainMenuCardView.MainMenuWrapper;
+import media.mit.edu.macontrol.R;
 
 public class MainActivity extends BaseActivity
         implements NavigationView.OnNavigationItemSelectedListener, AdapterView.OnItemClickListener,
@@ -30,7 +31,7 @@ public class MainActivity extends BaseActivity
 
         // initialize UI elements
         mAdapter = new MainMenuAdapter(this);
-        GridView grid = (GridView) findViewById(R.id.grid_layout);
+        GridView grid = (GridView) findViewById(R.id.grid_view);
         grid.setAdapter(mAdapter);
         grid.setOnItemClickListener(this);
 

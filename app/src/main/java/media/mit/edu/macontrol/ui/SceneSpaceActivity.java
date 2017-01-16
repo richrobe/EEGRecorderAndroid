@@ -1,4 +1,4 @@
-package media.mit.edu.macontrol;
+package media.mit.edu.macontrol.ui;
 
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -9,6 +9,8 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+
+import media.mit.edu.macontrol.R;
 
 public class SceneSpaceActivity extends BaseActivity
         implements NavigationView.OnNavigationItemSelectedListener {

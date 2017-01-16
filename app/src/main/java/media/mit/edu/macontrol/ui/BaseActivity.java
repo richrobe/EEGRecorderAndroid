@@ -1,4 +1,4 @@
-package media.mit.edu.macontrol;
+package media.mit.edu.macontrol.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -28,6 +28,10 @@ import org.json.JSONObject;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Locale;
+
+import media.mit.edu.macontrol.communication.DownloadFileTask;
+import media.mit.edu.macontrol.R;
+import media.mit.edu.macontrol.communication.SceneSpaceWebSocket;
 
 public abstract class BaseActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, SceneSpaceWebSocket.WebSocketListener, DownloadFileTask.AsyncDownloadResponse, View.OnClickListener {
 

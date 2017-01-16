@@ -1,4 +1,4 @@
-package media.mit.edu.macontrol;
+package media.mit.edu.macontrol.communication;
 
 import android.util.Log;
 

@@ -1,4 +1,4 @@
-package media.mit.edu.macontrol;
+package media.mit.edu.macontrol.ui;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -39,6 +39,9 @@ import de.fau.lme.plotview.SamplingPlot;
 import de.fau.sensorlib.DsSensorManager;
 import de.fau.sensorlib.dataframe.SensorDataFrame;
 import de.fau.sensorlib.sensors.MuseSensor;
+import media.mit.edu.macontrol.communication.BleService;
+import media.mit.edu.macontrol.R;
+import media.mit.edu.macontrol.SensorActivityCallback;
 
 public class MuseRecordingActivity extends BaseActivity implements View.OnClickListener, ServiceConnection, SensorActivityCallback {
 

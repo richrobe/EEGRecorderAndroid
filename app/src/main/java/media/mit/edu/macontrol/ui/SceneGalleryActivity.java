@@ -1,4 +1,4 @@
-package media.mit.edu.macontrol;
+package media.mit.edu.macontrol.ui;
 
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
@@ -22,6 +22,9 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
+import media.mit.edu.macontrol.communication.DownloadFileTask;
+import media.mit.edu.macontrol.R;
+
 public class SceneGalleryActivity extends BaseActivity implements DownloadFileTask.AsyncDownloadResponse, View.OnTouchListener {
 
     private static final String TAG = SceneGalleryActivity.class.getSimpleName();
@@ -43,7 +46,7 @@ public class SceneGalleryActivity extends BaseActivity implements DownloadFileTa
             @Override
             public void onScaleEnd(ScaleGestureDetector detector) {
                 float scaleFactor = detector.getScaleFactor();
-                Log.d(TAG, "scale: " + scaleFactor);
+                //Log.d(TAG, "scale: " + scaleFactor);
                 int spanCount = mLayoutManager.getSpanCount();
                 if (0.67 <= scaleFactor && scaleFactor < 1.0) {
                     spanCount++;
@@ -117,7 +120,7 @@ public class SceneGalleryActivity extends BaseActivity implements DownloadFileTa
 
         @Override
         public void onItemClick(View view, int position) {
-            Log.d(TAG, "onItemClick: " + position);
+            //Log.d(TAG, "onItemClick: " + position);
             JSONObject scene = mDataset.get(position);
             try {
                 final int sceneId = scene.getInt("scene_id");

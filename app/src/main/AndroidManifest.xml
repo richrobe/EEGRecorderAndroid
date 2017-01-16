@@ -3,6 +3,7 @@
     package="media.mit.edu.macontrol">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
@@ -17,7 +18,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.MainActivity"
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -26,39 +27,64 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".SceneSpaceActivity"
+            android:name=".ui.SceneSpaceActivity"
             android:label="@string/title_activity_scene_space"
-            android:parentActivityName=".MainActivity"
+            android:parentActivityName=".ui.MainActivity"
             android:screenOrientation="landscape">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="media.mit.edu.macontrol.MainActivity" />
+                android:value="media.mit.edu.macontrol.ui.MainActivity" />
         </activity>
         <activity
-            android:name=".SceneGalleryActivity"
+            android:name=".ui.SceneGalleryActivity"
             android:label="@string/title_activity_scene_gallery"
-            android:parentActivityName=".MainActivity"
+            android:parentActivityName=".ui.MainActivity"
             android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="media.mit.edu.macontrol.MainActivity" />
+                android:value="media.mit.edu.macontrol.ui.MainActivity" />
         </activity>
         <activity
-            android:name=".MuseRecordingActivity"
+            android:name=".ui.MuseRecordingActivity"
             android:label="@string/title_activity_muse_data"
-            android:parentActivityName=".MainActivity"
+            android:parentActivityName=".ui.MainActivity"
             android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="media.mit.edu.macontrol.MainActivity" />
+                android:value="media.mit.edu.macontrol.ui.MainActivity" />
         </activity>
 
         <service
-            android:name=".BleService"
+            android:name=".communication.BleService"
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".SettingsActivity"></activity>
+        <activity
+            android:name=".ui.SettingsActivity"
+            android:label="@string/action_settings"
+            android:parentActivityName=".ui.MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="media.mit.edu.macontrol.ui.MainActivity" />
+        </activity>
+
+        <receiver android:name=".appwidget.SceneGalleryWidgetProvider">
+            <intent-filter>
+
+                <!-- This widget provider receives broadcast with following action name or simply onUpdate of AppWidgetProvider is called -->
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="media.mit.edu.macontrol.ACTION_SCENE" />
+            </intent-filter>
+            <!-- linking up xml file of appwidget-provider to AppWidgetProvider -->
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/appwidget_scene_gallery" />
+        </receiver>
+
+        <service
+            android:name=".appwidget.SceneGalleryWidgetService"
+            android:permission="android.permission.BIND_REMOTEVIEWS" />
+
     </application>
 
 </manifest>

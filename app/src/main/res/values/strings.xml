@@ -36,5 +36,6 @@
     <string name="pref_enable_streaming">pref_enable_streaming</string>
     <string name="pref_address">pref_address</string>
     <string name="pref_port">pref_hello</string>
+    <string name="empty_string">Empty</string>
 
 </resources>

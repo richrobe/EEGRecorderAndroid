@@ -1,4 +1,4 @@
-package media.mit.edu.macontrol;
+package media.mit.edu.macontrol.ui;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -8,6 +8,8 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 
 import com.google.common.net.InternetDomainName;
+
+import media.mit.edu.macontrol.R;
 
 public class SettingsActivity extends BaseActivity {
 
