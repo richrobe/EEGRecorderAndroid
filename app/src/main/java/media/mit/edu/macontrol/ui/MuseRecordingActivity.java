@@ -198,23 +198,6 @@ public class MuseRecordingActivity extends BaseActivity implements View.OnClickL
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
-    }
-
-    @Override
-    public void onOpen() {
-
-    }
-
-    @Override
-    public void onMessage(String message) {
-
-    }
-
-    @Override
-    public void onClose(String reason) {
-
     }
 
     @Override

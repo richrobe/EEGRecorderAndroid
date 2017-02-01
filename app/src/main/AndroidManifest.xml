@@ -27,24 +27,6 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ui.SceneSpaceActivity"
-            android:label="@string/title_activity_scene_space"
-            android:parentActivityName=".ui.MainActivity"
-            android:screenOrientation="landscape">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="media.mit.edu.macontrol.ui.MainActivity" />
-        </activity>
-        <activity
-            android:name=".ui.SceneGalleryActivity"
-            android:label="@string/title_activity_scene_gallery"
-            android:parentActivityName=".ui.MainActivity"
-            android:screenOrientation="portrait">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="media.mit.edu.macontrol.ui.MainActivity" />
-        </activity>
-        <activity
             android:name=".ui.MuseRecordingActivity"
             android:label="@string/title_activity_muse_data"
             android:parentActivityName=".ui.MainActivity"
@@ -67,23 +49,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="media.mit.edu.macontrol.ui.MainActivity" />
         </activity>
-
-        <receiver android:name=".appwidget.SceneGalleryWidgetProvider">
-            <intent-filter>
-
-                <!-- This widget provider receives broadcast with following action name or simply onUpdate of AppWidgetProvider is called -->
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="media.mit.edu.macontrol.ACTION_SCENE" />
-            </intent-filter>
-            <!-- linking up xml file of appwidget-provider to AppWidgetProvider -->
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/appwidget_scene_gallery" />
-        </receiver>
-
-        <service
-            android:name=".appwidget.SceneGalleryWidgetService"
-            android:permission="android.permission.BIND_REMOTEVIEWS" />
 
     </application>
 
