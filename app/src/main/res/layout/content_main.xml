@@ -19,8 +19,4 @@
         android:orientation="vertical"
         android:verticalSpacing="@dimen/activity_vertical_margin" />
 
-    <include
-        android:id="@+id/current_scene"
-        layout="@layout/layout_widget_current_scene" />
-
 </RelativeLayout>

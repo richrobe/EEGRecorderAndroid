@@ -5,40 +5,23 @@
         <item
             android:id="@+id/nav_main"
             android:icon="@drawable/ic_nav_home"
-            android:title="Main" />
-        <item
-            android:id="@+id/nav_scene_space"
-            android:icon="@drawable/ic_nav_scene_space"
-            android:title="Scene Space" />
-        <item
-            android:id="@+id/nav_scene_gallery"
-            android:icon="@drawable/ic_nav_scene_gallery"
-            android:title="Scene Gallery" />
+            android:title="@string/string_main" />
         <item
             android:id="@+id/nav_muse_recording"
             android:icon="@drawable/ic_nav_muse"
-            android:title="Muse Recording" />
+            android:title="@string/string_muse" />
+        <item
+            android:id="@+id/nav_essence"
+            android:icon="@drawable/ic_nav_essence"
+            android:title="@string/string_essence" />
     </group>
 
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/nav_settings"
             android:icon="@drawable/ic_nav_settings"
-            android:title="Settings" />
+            android:title="@string/string_settings" />
     </group>
 
-    <!--<item android:title="Communicate">
-        <menu>
-            <item
-                android:id="@+id/nav_share"
-                android:icon="@drawable/ic_menu_share"
-                android:title="Share" />
-            <item
-                android:id="@+id/nav_send"
-                android:icon="@drawable/ic_menu_send"
-                android:title="Send" />
-        </menu>
-    </item>
-    -->
 
 </menu>

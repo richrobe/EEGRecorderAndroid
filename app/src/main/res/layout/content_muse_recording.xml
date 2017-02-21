@@ -20,7 +20,7 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <de.fau.lme.dailyheartwidgets.StatusBar xmlns:status_bar="http://schemas.android.com/apk/res-auto"
+    <de.fau.lme.widgets.StatusBar xmlns:status_bar="http://schemas.android.com/apk/res-auto"
         android:id="@+id/status_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
