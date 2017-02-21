@@ -1,4 +1,4 @@
-package media.mit.edu.eegmonitor.ui;
+package edu.mit.media.eegmonitor.ui;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -9,7 +9,7 @@ import android.preference.PreferenceManager;
 
 import com.google.common.net.InternetDomainName;
 
-import media.mit.edu.eegmonitor.R;
+import edu.mit.media.eegmonitor.R;
 
 public class SettingsActivity extends BaseActivity {
 

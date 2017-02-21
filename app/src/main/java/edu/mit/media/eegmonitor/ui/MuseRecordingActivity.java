@@ -1,4 +1,4 @@
-package media.mit.edu.eegmonitor.ui;
+package edu.mit.media.eegmonitor.ui;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -32,16 +32,16 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import de.fau.lme.widgets.StatusBar;
 import de.fau.lme.plotview.Plot;
 import de.fau.lme.plotview.PlotView;
 import de.fau.lme.plotview.SamplingPlot;
+import de.fau.lme.widgets.StatusBar;
 import de.fau.sensorlib.DsSensorManager;
 import de.fau.sensorlib.dataframe.SensorDataFrame;
 import de.fau.sensorlib.sensors.MuseSensor;
-import media.mit.edu.eegmonitor.communication.BleService;
-import media.mit.edu.eegmonitor.R;
-import media.mit.edu.eegmonitor.SensorActivityCallback;
+import edu.mit.media.eegmonitor.R;
+import edu.mit.media.eegmonitor.SensorActivityCallback;
+import edu.mit.media.eegmonitor.communication.BleService;
 
 public class MuseRecordingActivity extends BaseActivity implements View.OnClickListener, ServiceConnection, SensorActivityCallback {
 

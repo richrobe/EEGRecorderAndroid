@@ -1,4 +1,4 @@
-package media.mit.edu.eegmonitor.communication;
+package edu.mit.media.eegmonitor.communication;
 
 import android.app.Service;
 import android.content.Intent;
@@ -17,7 +17,7 @@ import de.fau.sensorlib.SensorFoundCallback;
 import de.fau.sensorlib.SensorInfo;
 import de.fau.sensorlib.dataframe.SensorDataFrame;
 import de.fau.sensorlib.sensors.MuseSensor;
-import media.mit.edu.eegmonitor.SensorActivityCallback;
+import edu.mit.media.eegmonitor.SensorActivityCallback;
 
 public class BleService extends Service {
 

@@ -1,4 +1,4 @@
-package media.mit.edu.eegmonitor.ui;
+package edu.mit.media.eegmonitor.ui;
 
 import android.app.ActivityOptions;
 import android.content.Context;
@@ -11,8 +11,9 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 
-import media.mit.edu.eegmonitor.R;
-import media.mit.edu.eegmonitor.ui.MainMenuCardView.MainMenuWrapper;
+import edu.mit.media.eegmonitor.R;
+
+import static edu.mit.media.eegmonitor.ui.MainMenuCardView.MainMenuWrapper;
 
 public class MainActivity extends BaseActivity
         implements NavigationView.OnNavigationItemSelectedListener, AdapterView.OnItemClickListener,

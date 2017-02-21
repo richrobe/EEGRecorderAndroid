@@ -1,8 +1,8 @@
-package media.mit.edu.eegmonitor.ui;
+package edu.mit.media.eegmonitor.ui;
 
 import android.os.Bundle;
 
-import media.mit.edu.eegmonitor.R;
+import edu.mit.media.eegmonitor.R;
 
 /**
  * NEW Activities have to be subclasses of {@link BaseActivity}

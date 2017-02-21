@@ -1,4 +1,4 @@
-package media.mit.edu.eegmonitor;
+package edu.mit.media.eegmonitor;
 
 import de.fau.sensorlib.dataframe.SensorDataFrame;
 

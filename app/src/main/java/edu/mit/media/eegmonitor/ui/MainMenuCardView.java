@@ -1,4 +1,4 @@
-package media.mit.edu.eegmonitor.ui;
+package edu.mit.media.eegmonitor.ui;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -11,7 +11,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import media.mit.edu.eegmonitor.R;
+import edu.mit.media.eegmonitor.R;
 
 /**
  * Created by Robert on 13.12.15.

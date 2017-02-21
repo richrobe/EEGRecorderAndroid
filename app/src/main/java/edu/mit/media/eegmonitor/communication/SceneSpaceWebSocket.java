@@ -1,4 +1,4 @@
-package media.mit.edu.eegmonitor.communication;
+package edu.mit.media.eegmonitor.communication;
 
 import android.util.Log;
 
