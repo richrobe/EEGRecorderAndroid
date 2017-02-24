@@ -2,13 +2,25 @@ package edu.mit.media.eegmonitor.communication;
 
 import android.app.Service;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
-import android.util.SparseIntArray;
 
+import com.choosemuse.libmuse.Eeg;
+import com.choosemuse.libmuse.MuseDataPacketType;
+import com.illposed.osc.OSCMessage;
+import com.illposed.osc.OSCPortOut;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import de.fau.sensorlib.DsSensor;
 import de.fau.sensorlib.DsSensorManager;
@@ -18,6 +30,9 @@ import de.fau.sensorlib.SensorInfo;
 import de.fau.sensorlib.dataframe.SensorDataFrame;
 import de.fau.sensorlib.sensors.MuseSensor;
 import edu.mit.media.eegmonitor.SensorActivityCallback;
+import edu.mit.media.eegmonitor.dataprocessing.BlinkRateProcessor;
+import edu.mit.media.eegmonitor.dataprocessing.EegScoreProcessor;
+import edu.mit.media.eegmonitor.dataprocessing.EegScoreProcessor.ScoreType;
 
 public class BleService extends Service {
 
@@ -25,8 +40,22 @@ public class BleService extends Service {
 
     private IBinder mBinder = new BleServiceBinder();
 
-    private DsSensor mMuseSensor;
-    private MuseDataProcessor mSensorDataProcessor = new MuseDataProcessor();
+    private static int PORT;
+    private static String IP_ADDRESS;
+    private static final String ADDRESS_BLINK = "/muse/elements/blink";
+    private static final String ADDRESS_BLINK_RATE = "/muse/elements/blink_rate";
+    private static final String ADDRESS_EEG = "/muse/elements/";
+    private OSCPortOut mOscPortOut;
+    private boolean mStreamingEnabled;
+
+    private final BlockingQueue<Runnable> mSendQueue = new LinkedBlockingQueue<>();
+    private ThreadPoolExecutor mThreadPoolExecutor;
+    private static int NUMBER_OF_CORES = Runtime.getRuntime().availableProcessors();
+    // Sets the amount of time an idle thread waits before terminating
+    private static final int KEEP_ALIVE_TIME = 1;
+    // Sets the Time Unit to seconds
+    private static final TimeUnit KEEP_ALIVE_TIME_UNIT = TimeUnit.SECONDS;
+
 
     private SensorFoundCallback mSensorFoundCallback = new SensorFoundCallback() {
         @Override
@@ -34,7 +63,9 @@ public class BleService extends Service {
             Log.d(TAG, "Known sensor found: " + sensor.getName() + ", " + sensor.getDeviceAddress());
             switch (sensor.getDeviceClass()) {
                 case MUSE:
-                    mMuseSensor = new MuseSensor(BleService.this, sensor, mSensorDataProcessor);
+                    mMuseSensor = new MuseSensor(BleService.this, sensor, mMuseDataProcessor);
+                    break;
+                case EMPATICA:
                     break;
             }
             return true;
@@ -49,14 +80,22 @@ public class BleService extends Service {
     private SensorActivityCallback mActivityCallback;
 
 
+    private DsSensor mMuseSensor;
+    private MuseDataProcessor mMuseDataProcessor = new MuseDataProcessor();
+    private EegScoreProcessor.EegScoreListener mScoreCallback;
+
     public void setSensorActivityCallback(SensorActivityCallback callback) {
         mActivityCallback = callback;
+    }
+
+    public void setScoreCallback(EegScoreProcessor.EegScoreListener callback) {
+        mScoreCallback = callback;
     }
 
     public void startMuse() {
         try {
             DsSensorManager.searchBleDevices(mSensorFoundCallback);
-            //mMuseSensor = new MuseSensor(this, DsSensorManager.getFirstConnectableSensor(KnownSensor.MUSE), mSensorDataProcessor);
+            //mMuseSensor = new MuseSensor(this, DsSensorManager.getFirstConnectableSensor(KnownSensor.MUSE), mMuseDataProcessor);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -66,7 +105,7 @@ public class BleService extends Service {
             public void run() {
                 DsSensorManager.cancelRunningScans();
                 if (mMuseSensor == null) {
-                    mActivityCallback.onScanResult(false);
+                    mActivityCallback.onScanResult(null, false);
                 }
             }
         }, 10000);
@@ -80,13 +119,33 @@ public class BleService extends Service {
         }
     }
 
-    public MuseDataProcessor getSensorDataProcessor() {
-        return mSensorDataProcessor;
+    public MuseDataProcessor getMuseDataProcessor() {
+        return mMuseDataProcessor;
     }
+
 
     @Override
     public IBinder onBind(Intent intent) {
         Log.d(TAG, "Service bond!");
+
+        try {
+            mOscPortOut = new AsyncTask<Void, Void, OSCPortOut>() {
+
+                @Override
+                protected OSCPortOut doInBackground(Void... params) {
+                    try {
+                        return mOscPortOut = new OSCPortOut(InetAddress.getByName(IP_ADDRESS), PORT);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                }
+            }.execute().get();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        mThreadPoolExecutor = new ThreadPoolExecutor(NUMBER_OF_CORES, NUMBER_OF_CORES, KEEP_ALIVE_TIME, KEEP_ALIVE_TIME_UNIT, mSendQueue);
 
         return mBinder;
     }
@@ -97,6 +156,15 @@ public class BleService extends Service {
         mBinder = null;
         mSensorFoundCallback = null;
         return false;
+    }
+
+    public void setStreamingEnabled(boolean enabled) {
+        mStreamingEnabled = enabled;
+    }
+
+    public void setDestinationAddress(String ipAddress, int port) {
+        IP_ADDRESS = ipAddress;
+        PORT = port;
     }
 
     /**
@@ -110,15 +178,16 @@ public class BleService extends Service {
         }
     }
 
-    public class MuseDataProcessor extends SensorDataProcessor {
+    public class MuseDataProcessor extends SensorDataProcessor implements EegScoreProcessor.EegScoreListener {
 
-        private int mTotalBlinks = 0;
-        private double mBlinkRate = 0.0;
+        private BlinkRateProcessor mBlinkRateProcessor;
+        private EegScoreProcessor mFocusScoreProcessor;
+        private EegScoreProcessor mRelaxScoreProcessor;
 
         @Override
         public void onSensorCreated(DsSensor sensor) {
             super.onSensorCreated(sensor);
-            mActivityCallback.onScanResult(true);
+            mActivityCallback.onScanResult(sensor, true);
             try {
                 sensor.useHardwareSensors(EnumSet.of(DsSensor.HardwareSensor.EEG_FREQ_BANDS));
                 sensor.connect();
@@ -130,7 +199,7 @@ public class BleService extends Service {
         @Override
         public void onConnected(DsSensor sensor) {
             super.onConnected(sensor);
-            mActivityCallback.onSensorConnected();
+            mActivityCallback.onSensorConnected(sensor);
             ((MuseSensor) sensor).shouldUseArtifactSensor(true);
             sensor.startStreaming();
         }
@@ -138,29 +207,32 @@ public class BleService extends Service {
         @Override
         public void onDisconnected(DsSensor sensor) {
             super.onDisconnected(sensor);
-            mActivityCallback.onSensorDisconnected();
+            mActivityCallback.onSensorDisconnected(sensor);
             mMuseSensor = null;
         }
 
         @Override
         public void onConnectionLost(DsSensor sensor) {
             super.onConnectionLost(sensor);
-            mActivityCallback.onSensorConnectionLost();
+            mActivityCallback.onSensorConnectionLost(sensor);
         }
 
         @Override
         public void onStartStreaming(DsSensor sensor) {
             super.onStartStreaming(sensor);
-            mActivityCallback.onStartStreaming();
-            START_TIME = System.currentTimeMillis();
-            mLastTimeStamp = START_TIME;
+            mActivityCallback.onStartStreaming(sensor);
+            mBlinkRateProcessor = new BlinkRateProcessor(System.currentTimeMillis());
+            mFocusScoreProcessor = new EegScoreProcessor(new Eeg[]{Eeg.EEG1, Eeg.EEG4},
+                    new MuseDataPacketType[]{MuseDataPacketType.GAMMA_RELATIVE, MuseDataPacketType.BETA_RELATIVE}, ScoreType.FOCUS, this);
+            mRelaxScoreProcessor = new EegScoreProcessor(new Eeg[]{Eeg.EEG1, Eeg.EEG4},
+                    new MuseDataPacketType[]{MuseDataPacketType.ALPHA_RELATIVE, MuseDataPacketType.THETA_RELATIVE}, ScoreType.RELAX, this);
         }
 
         @Override
         public void onStopStreaming(DsSensor sensor) {
             super.onStopStreaming(sensor);
             sensor.disconnect();
-            mActivityCallback.onStopStreaming();
+            mActivityCallback.onStopStreaming(sensor);
         }
 
         @Override
@@ -171,60 +243,103 @@ public class BleService extends Service {
 
         @Override
         public void onNewData(SensorDataFrame data) {
-            // TODO
             if (data instanceof MuseSensor.MuseEegDataFrame) {
                 MuseSensor.MuseEegDataFrame eegData = (MuseSensor.MuseEegDataFrame) data;
+                mActivityCallback.onDataReceived(mMuseSensor, data);
                 switch (eegData.getPacketType()) {
                     case ALPHA_RELATIVE:
-                        //Log.d(TAG, "alpha: " + Arrays.toString(eegData.getAlphaBand()));
-                        break;
-                    case BETA_RELATIVE:
-                        //Log.d(TAG, "beta: " + Arrays.toString(eegData.getBetaBand()));
+                    case THETA_RELATIVE:
+                        mRelaxScoreProcessor.nextEegSample(eegData.getPacketType(),
+                                eegData.getEegBand(), eegData.getTimestamp(), null);
                         break;
                     case GAMMA_RELATIVE:
-                        //Log.d(TAG, "gamma: " + Arrays.toString(eegData.getGammaBand()));
+                    case BETA_RELATIVE:
+                        mFocusScoreProcessor.nextEegSample(eegData.getPacketType(),
+                                eegData.getEegBand(), eegData.getTimestamp(), null);
                         break;
                 }
-                mActivityCallback.onDataReceived(data);
+
+                if (mStreamingEnabled) {
+                    sendOscDataEeg(eegData.getEegBand(), eegData.getPacketType());
+                }
             } else if (data instanceof MuseSensor.MuseArtifactDataFrame) {
                 MuseSensor.MuseArtifactDataFrame museData = (MuseSensor.MuseArtifactDataFrame) data;
                 if (museData.getBlink()) {
-                    double timeDiff = (museData.getTimestamp() - mLastTimeStamp);
-                    if (timeDiff > 150.0) {
-                        //Log.d(TAG, "blink: " + timeDiff);
-                        int startTimeDiff = (int) (museData.getTimestamp() - START_TIME);
-                        mBlinkList.append(startTimeDiff, 1);
-                        while ((mBlinkList.keyAt(mBlinkList.size() - 1) - mBlinkList.keyAt(0)) > 10000) {
-                            Log.d(TAG, "removing element");
-                            mBlinkList.removeAt(0);
-                        }
-
-                        if (mBlinkList.size() > 1) {
-                            //Log.d(TAG, "SWAP!!! : " + mBlinkList.keyAt(0) + ", " + startTimeDiff);
-                            mBlinkRate = (mBlinkList.size() * (1000.0 * 60.0)) / (double) (mBlinkList.keyAt(mBlinkList.size() - 1) - mBlinkList.keyAt(0));
-                            Log.d(TAG, "blink rate: " + mBlinkRate + " / min");
-                        }
-                        Log.d(TAG, "blink list: " + mBlinkList);
-
-
-                        mTotalBlinks++;
-                        mLastTimeStamp = museData.getTimestamp();
-                        mActivityCallback.onDataReceived(data);
+                    mBlinkRateProcessor.nextBlink(museData.getTimestamp());
+                    mActivityCallback.onDataReceived(mMuseSensor, data);
+                    if (mStreamingEnabled) {
+                        sendOscDataBlink(mBlinkRateProcessor.getBlinkRate());
                     }
                 }
             }
         }
 
-        private double START_TIME;
-        private double mLastTimeStamp;
-        private SparseIntArray mBlinkList = new SparseIntArray();
-
         public int getTotalBlinks() {
-            return mTotalBlinks;
+            return mBlinkRateProcessor.getTotalBlinks();
         }
 
         public double getBlinkRate() {
-            return mBlinkRate;
+            return mBlinkRateProcessor.getBlinkRate();
         }
+
+        @Override
+        public void onNewCurrentScores(ScoreType type, double[] values, double timestamp) {
+            mScoreCallback.onNewCurrentScores(type, values, timestamp);
+        }
+
+        @Override
+        public void onNewAverageScores(ScoreType type, double[] values, double timestamp) {
+            Log.d(TAG, "New " + type + " score: " + Arrays.toString(values));
+            mScoreCallback.onNewAverageScores(type, values, timestamp);
+        }
+
+        @Override
+        public void onNewClassification(ScoreType type, boolean stateReached, double timestamp) {
+            mScoreCallback.onNewClassification(type, stateReached, timestamp);
+        }
+    }
+
+
+    private synchronized void sendOscDataEeg(final double[] eegValues, final MuseDataPacketType packetType) {
+        mThreadPoolExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                OSCMessage msg = new OSCMessage(ADDRESS_EEG + packetType.name().toLowerCase());
+                try {
+                    for (int i = 0; i < 4; i++) {
+                        if (Float.isNaN((float) eegValues[i])) {
+                            return;
+                        }
+                        msg.addArgument((float) eegValues[i]);
+                    }
+                    mOscPortOut.send(msg);
+                } catch (IOException e) {
+                    /*Log.e(TAG, "ERROR");
+                    Log.d(TAG, msg.getAddress());
+                    Log.d(TAG, String.valueOf(msg.getArguments()));*/
+                    //e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    private synchronized void sendOscDataBlink(final double blinkrate) {
+        mThreadPoolExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    OSCMessage msgBlink = new OSCMessage(ADDRESS_BLINK);
+                    msgBlink.addArgument(1);
+                    OSCMessage msgBlinkRate = new OSCMessage(ADDRESS_BLINK_RATE);
+                    msgBlinkRate.addArgument(blinkrate);
+                    mOscPortOut.send(msgBlink);
+                    mOscPortOut.send(msgBlinkRate);
+                    Log.e(TAG, String.valueOf(msgBlink.getArguments()));
+                    Log.e(TAG, String.valueOf(msgBlinkRate.getArguments()));
+                } catch (IOException e) {
+                    //e.printStackTrace();
+                }
+            }
+        });
     }
 }

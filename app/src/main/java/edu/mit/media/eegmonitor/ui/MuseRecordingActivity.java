@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -20,42 +19,29 @@ import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.choosemuse.libmuse.MuseDataPacketType;
-import com.illposed.osc.OSCMessage;
-import com.illposed.osc.OSCPortOut;
+import com.choosemuse.libmuse.Eeg;
 
-import java.io.IOException;
-import java.net.InetAddress;
 import java.text.DecimalFormat;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import de.fau.lme.plotview.Plot;
 import de.fau.lme.plotview.PlotView;
 import de.fau.lme.plotview.SamplingPlot;
 import de.fau.lme.widgets.StatusBar;
+import de.fau.sensorlib.DsSensor;
 import de.fau.sensorlib.DsSensorManager;
 import de.fau.sensorlib.dataframe.SensorDataFrame;
 import de.fau.sensorlib.sensors.MuseSensor;
 import edu.mit.media.eegmonitor.R;
 import edu.mit.media.eegmonitor.SensorActivityCallback;
 import edu.mit.media.eegmonitor.communication.BleService;
+import edu.mit.media.eegmonitor.dataprocessing.EegScoreProcessor;
 
-public class MuseRecordingActivity extends BaseActivity implements View.OnClickListener, ServiceConnection, SensorActivityCallback {
+public class MuseRecordingActivity extends BaseActivity implements View.OnClickListener,
+        ServiceConnection, SensorActivityCallback, EegScoreProcessor.EegScoreListener {
 
     private static final String TAG = MuseRecordingActivity.class.getSimpleName();
 
     private static final int SAMPLING_RATE_EEG_BANDS = 10;
-
-    private static int PORT;
-    private static String IP_ADDRESS;
-    private static final String ADDRESS_BLINK = "/muse/elements/blink";
-    private static final String ADDRESS_BLINK_RATE = "/muse/elements/blink_rate";
-    private static final String ADDRESS_EEG = "/muse/elements/";
-    private OSCPortOut mOscPortOut;
-    private boolean mStreamingEnabled;
 
     private StatusBar mStatusBar;
     private FloatingActionButton mFab;
@@ -89,14 +75,6 @@ public class MuseRecordingActivity extends BaseActivity implements View.OnClickL
     protected BleService mService;
     protected Intent mServiceIntent;
     private BleService.MuseDataProcessor mSensorDataProcessor;
-
-    private final BlockingQueue<Runnable> mSendQueue = new LinkedBlockingQueue<Runnable>();
-    private ThreadPoolExecutor mThreadPoolExecutor;
-    private static int NUMBER_OF_CORES = Runtime.getRuntime().availableProcessors();
-    // Sets the amount of time an idle thread waits before terminating
-    private static final int KEEP_ALIVE_TIME = 1;
-    // Sets the Time Unit to seconds
-    private static final TimeUnit KEEP_ALIVE_TIME_UNIT = TimeUnit.SECONDS;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -167,25 +145,6 @@ public class MuseRecordingActivity extends BaseActivity implements View.OnClickL
         mServiceIntent = new Intent(this, BleService.class);
 
         checkPreferenceUpdates();
-
-        try {
-            mOscPortOut = new AsyncTask<Void, Void, OSCPortOut>() {
-
-                @Override
-                protected OSCPortOut doInBackground(Void... params) {
-                    try {
-                        return mOscPortOut = new OSCPortOut(InetAddress.getByName(IP_ADDRESS), PORT);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    return null;
-                }
-            }.execute().get();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        mThreadPoolExecutor = new ThreadPoolExecutor(NUMBER_OF_CORES, NUMBER_OF_CORES, KEEP_ALIVE_TIME, KEEP_ALIVE_TIME_UNIT, mSendQueue);
     }
 
     @Override
@@ -308,10 +267,13 @@ public class MuseRecordingActivity extends BaseActivity implements View.OnClickL
 
     private void checkPreferenceUpdates() {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-        mStreamingEnabled = sp.getBoolean(getString(R.string.pref_enable_streaming), true);
-        IP_ADDRESS = sp.getString(getString(R.string.pref_address), "127.0.0.1");
-        PORT = Integer.parseInt(sp.getString(getString(R.string.pref_port), "5000"));
-        Log.d(TAG, "address: " + IP_ADDRESS + ", port: " + PORT);
+        String ipAddress = sp.getString(getString(R.string.pref_address), "127.0.0.1");
+        int port = Integer.parseInt(sp.getString(getString(R.string.pref_port), "5000"));
+        Log.d(TAG, "address: " + ipAddress + ", port: " + port);
+        if (mService != null) {
+            mService.setStreamingEnabled(sp.getBoolean(getString(R.string.pref_enable_streaming), true));
+            mService.setDestinationAddress(ipAddress, port);
+        }
     }
 
     private void startMuse() {
@@ -331,8 +293,10 @@ public class MuseRecordingActivity extends BaseActivity implements View.OnClickL
     public void onServiceConnected(ComponentName name, IBinder service) {
         mService = ((BleService.BleServiceBinder) service).getService();
         mService.setSensorActivityCallback(this);
+        mService.setScoreCallback(this);
         mService.startMuse();
-        mSensorDataProcessor = mService.getSensorDataProcessor();
+        mSensorDataProcessor = mService.getMuseDataProcessor();
+        checkPreferenceUpdates();
     }
 
     @Override
@@ -341,7 +305,7 @@ public class MuseRecordingActivity extends BaseActivity implements View.OnClickL
     }
 
     @Override
-    public void onScanResult(boolean sensorFound) {
+    public void onScanResult(DsSensor sensor, boolean sensorFound) {
         if (!sensorFound) {
             Log.d(TAG, "No sensors found...");
             mStopButton.performClick();
@@ -351,36 +315,36 @@ public class MuseRecordingActivity extends BaseActivity implements View.OnClickL
     }
 
     @Override
-    public void onStartStreaming() {
+    public void onStartStreaming(DsSensor sensor) {
         mFab.performClick();
         mStreaming = true;
         clearUi();
     }
 
     @Override
-    public void onStopStreaming() {
+    public void onStopStreaming(DsSensor sensor) {
         mStreaming = false;
     }
 
     @Override
-    public void onMessageReceived(Object... message) {
+    public void onMessageReceived(DsSensor sensor, Object... message) {
 
     }
 
     @Override
-    public void onSensorConnected() {
+    public void onSensorConnected(DsSensor sensor) {
         mConnected = true;
         mStatusBar.setStatus(StatusBar.STATUS_CONNECTED);
     }
 
     @Override
-    public void onSensorDisconnected() {
+    public void onSensorDisconnected(DsSensor sensor) {
         mConnected = false;
         mStatusBar.setStatus(StatusBar.STATUS_DISCONNECTED);
     }
 
     @Override
-    public void onSensorConnectionLost() {
+    public void onSensorConnectionLost(DsSensor sensor) {
         mConnected = false;
         mStopButton.performClick();
         mFab.performClick();
@@ -389,48 +353,36 @@ public class MuseRecordingActivity extends BaseActivity implements View.OnClickL
     }
 
     @Override
-    public void onDataReceived(SensorDataFrame data) {
+    public void onDataReceived(DsSensor sensor, SensorDataFrame data) {
         if (data instanceof MuseSensor.MuseEegDataFrame) {
             MuseSensor.MuseEegDataFrame eegData = (MuseSensor.MuseEegDataFrame) data;
             long timestamp = (long) eegData.getTimestamp();
-            double[] eegValues;
-            float eegValue;
+            double[] eegValues = eegData.getEegBand();
+            float eegValue = (float) (eegValues[Eeg.EEG1.ordinal()] + eegValues[Eeg.EEG4.ordinal()]) / 2.0f;
             Plot plot;
             switch (eegData.getPacketType()) {
                 case ALPHA_RELATIVE:
-                    eegValues = eegData.getAlphaBand();
-                    //Log.d(TAG, "plot alpha: " + eegValue);
                     plot = mAlphaBandPlot;
                     break;
                 case BETA_RELATIVE:
-                    eegValues = eegData.getBetaBand();
                     plot = mBetaBandPlot;
                     break;
                 case GAMMA_RELATIVE:
-                    eegValues = eegData.getGammaBand();
                     plot = mGammaBandPlot;
                     break;
                 case THETA_RELATIVE:
-                    eegValues = eegData.getThetaBand();
                     plot = mThetaBandPlot;
                     break;
                 default:
                     return;
             }
 
-            eegValue = (float) (eegValues[0] + eegValues[3]) / 2.0f;
             if (!Float.isNaN(eegValue)) {
                 ((SamplingPlot) plot).addValue(eegValue, timestamp);
                 mEegBandsPlotView.requestRedraw(true);
-                if (mStreamingEnabled) {
-                    sendOscDataEeg(eegValues, eegData.getPacketType());
-                }
             }
-
-
         } else if (data instanceof MuseSensor.MuseArtifactDataFrame) {
-            MuseSensor.MuseArtifactDataFrame artifactData = (MuseSensor.MuseArtifactDataFrame) data;
-            if (artifactData.getBlink()) {
+            if (((MuseSensor.MuseArtifactDataFrame) data).getBlink()) {
                 float blinkRate = (float) mSensorDataProcessor.getBlinkRate();
                 mTotalBlinksTextView.setText(getString(R.string.placeholder_total_blinks, mSensorDataProcessor.getTotalBlinks()));
                 mBlinkRateTextView.setText(getString(R.string.placeholder_blink_rate, new DecimalFormat("00.00").format(blinkRate)));
@@ -441,46 +393,34 @@ public class MuseRecordingActivity extends BaseActivity implements View.OnClickL
                         mCoordinatorLayout.setBackgroundColor(ContextCompat.getColor(MuseRecordingActivity.this, R.color.grey_50));
                     }
                 }, 200);
-                if (mStreamingEnabled) {
-                    sendOscDataBlink(blinkRate);
-                }
             }
         }
     }
 
-    private void sendOscDataBlink(final float blinkrate) {
-        mThreadPoolExecutor.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    OSCMessage msgBlink = new OSCMessage(ADDRESS_BLINK);
-                    msgBlink.addArgument(1);
-                    OSCMessage msgBlinkRate = new OSCMessage(ADDRESS_BLINK_RATE);
-                    msgBlinkRate.addArgument(blinkrate);
-                    mOscPortOut.send(msgBlink);
-                    mOscPortOut.send(msgBlinkRate);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+    @Override
+    public void onNewCurrentScores(EegScoreProcessor.ScoreType type, double[] values, double timestamp) {
+
     }
 
-    private void sendOscDataEeg(final double[] eegValues, final MuseDataPacketType packetType) {
-
-        mThreadPoolExecutor.execute(new Runnable() {
-            @Override
-            public void run() {
-                OSCMessage msg = new OSCMessage(ADDRESS_EEG + packetType.name().toLowerCase());
-                try {
-                    for (int i = 0; i < 4; i++) {
-                        msg.addArgument((float) eegValues[i]);
-                    }
-                    mOscPortOut.send(msg);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+    @Override
+    public void onNewAverageScores(EegScoreProcessor.ScoreType type, double[] values, double timestamp) {
+        double scoreVal = values[EegScoreProcessor.ScoreMeasure.RENYI.ordinal()];
+        if (!Double.isNaN(scoreVal)) {
+            switch (type) {
+                case FOCUS:
+                    ((SamplingPlot) mFocusScorePlot).addValue((float) scoreVal, (long) timestamp);
+                    mEegScoresPlotView.requestRedraw(true);
+                    break;
+                case RELAX:
+                    ((SamplingPlot) mRelaxScorePlot).addValue((float) scoreVal, (long) timestamp);
+                    mEegScoresPlotView.requestRedraw(true);
+                    break;
             }
-        });
+        }
+    }
+
+    @Override
+    public void onNewClassification(EegScoreProcessor.ScoreType type, boolean stateReached, double timestamp) {
+
     }
 }

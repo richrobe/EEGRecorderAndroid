@@ -1,5 +1,6 @@
 package edu.mit.media.eegmonitor;
 
+import de.fau.sensorlib.DsSensor;
 import de.fau.sensorlib.dataframe.SensorDataFrame;
 
 /**
@@ -8,20 +9,20 @@ import de.fau.sensorlib.dataframe.SensorDataFrame;
 
 public interface SensorActivityCallback {
 
-    void onScanResult(boolean sensorFound);
+    void onScanResult(DsSensor sensor, boolean sensorFound);
 
-    void onStartStreaming();
+    void onStartStreaming(DsSensor sensor);
 
-    void onStopStreaming();
+    void onStopStreaming(DsSensor sensor);
 
-    void onMessageReceived(Object... message);
+    void onMessageReceived(DsSensor sensor, Object... message);
 
-    void onSensorConnected();
+    void onSensorConnected(DsSensor sensor);
 
-    void onSensorDisconnected();
+    void onSensorDisconnected(DsSensor sensor);
 
-    void onSensorConnectionLost();
+    void onSensorConnectionLost(DsSensor sensor);
 
-    void onDataReceived(SensorDataFrame data);
+    void onDataReceived(DsSensor sensor, SensorDataFrame data);
 
 }
