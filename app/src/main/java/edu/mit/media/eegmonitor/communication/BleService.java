@@ -15,7 +15,6 @@ import com.illposed.osc.OSCPortOut;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -32,6 +31,7 @@ import de.fau.sensorlib.sensors.MuseSensor;
 import edu.mit.media.eegmonitor.SensorActivityCallback;
 import edu.mit.media.eegmonitor.dataprocessing.BlinkRateProcessor;
 import edu.mit.media.eegmonitor.dataprocessing.EegScoreProcessor;
+import edu.mit.media.eegmonitor.dataprocessing.EegScoreProcessor.ScoreMeasure;
 import edu.mit.media.eegmonitor.dataprocessing.EegScoreProcessor.ScoreType;
 
 public class BleService extends Service {
@@ -95,7 +95,6 @@ public class BleService extends Service {
     public void startMuse() {
         try {
             DsSensorManager.searchBleDevices(mSensorFoundCallback);
-            //mMuseSensor = new MuseSensor(this, DsSensorManager.getFirstConnectableSensor(KnownSensor.MUSE), mMuseDataProcessor);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -289,7 +288,8 @@ public class BleService extends Service {
 
         @Override
         public void onNewAverageScores(ScoreType type, double[] values, double timestamp) {
-            Log.d(TAG, "New " + type + " score: " + Arrays.toString(values));
+            Log.d(TAG, "New " + type + " score: " + values[ScoreMeasure.RENYI.ordinal()]);
+            //Log.d(TAG, "New " + type + " score: " + Arrays.toString(values));
             mScoreCallback.onNewAverageScores(type, values, timestamp);
         }
 
@@ -314,10 +314,7 @@ public class BleService extends Service {
                     }
                     mOscPortOut.send(msg);
                 } catch (IOException e) {
-                    /*Log.e(TAG, "ERROR");
-                    Log.d(TAG, msg.getAddress());
-                    Log.d(TAG, String.valueOf(msg.getArguments()));*/
-                    //e.printStackTrace();
+                    e.printStackTrace();
                 }
             }
         });
@@ -337,7 +334,7 @@ public class BleService extends Service {
                     Log.e(TAG, String.valueOf(msgBlink.getArguments()));
                     Log.e(TAG, String.valueOf(msgBlinkRate.getArguments()));
                 } catch (IOException e) {
-                    //e.printStackTrace();
+                    e.printStackTrace();
                 }
             }
         });
