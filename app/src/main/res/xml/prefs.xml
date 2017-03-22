@@ -3,11 +3,18 @@
 
     <PreferenceCategory android:title="@string/pref_category_streaming">
 
-        <CheckBoxPreference
-            android:checked="true"
+        <SwitchPreference
+            android:defaultValue="true"
             android:key="@string/pref_enable_streaming"
             android:summary="@string/pref_summary_enable_streaming"
             android:title="@string/pref_title_streaming" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="@string/pref_streaming_type"
+            android:summaryOff="@string/pref_summary_streaming_type_off"
+            android:summaryOn="@string/pref_summary_streaming_type_on"
+            android:title="@string/pref_title_streaming_type" />
 
         <EditTextPreference
             android:defaultValue="127.0.0.1"

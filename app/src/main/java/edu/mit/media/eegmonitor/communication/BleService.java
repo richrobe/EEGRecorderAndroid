@@ -45,8 +45,11 @@ public class BleService extends Service {
     private static final String ADDRESS_BLINK = "/muse/elements/blink";
     private static final String ADDRESS_BLINK_RATE = "/muse/elements/blink_rate";
     private static final String ADDRESS_EEG = "/muse/elements/";
+    private static final String ADDRESS_RELAX = "/eeg/relax_score";
+    private static final String ADDRESS_FOCUS = "/eeg_focus_score";
     private OSCPortOut mOscPortOut;
     private boolean mStreamingEnabled;
+    private boolean mStreamScoreValues;
 
     private final BlockingQueue<Runnable> mSendQueue = new LinkedBlockingQueue<>();
     private ThreadPoolExecutor mThreadPoolExecutor;
@@ -55,7 +58,6 @@ public class BleService extends Service {
     private static final int KEEP_ALIVE_TIME = 1;
     // Sets the Time Unit to seconds
     private static final TimeUnit KEEP_ALIVE_TIME_UNIT = TimeUnit.SECONDS;
-
 
     private SensorFoundCallback mSensorFoundCallback = new SensorFoundCallback() {
         @Override
@@ -157,8 +159,10 @@ public class BleService extends Service {
         return false;
     }
 
-    public void setStreamingEnabled(boolean enabled) {
+    public void setStreamingEnabled(boolean enabled, boolean streamScoreValues) {
         mStreamingEnabled = enabled;
+        mStreamScoreValues = streamScoreValues;
+
     }
 
     public void setDestinationAddress(String ipAddress, int port) {
@@ -258,7 +262,7 @@ public class BleService extends Service {
                         break;
                 }
 
-                if (mStreamingEnabled) {
+                if (mStreamingEnabled && !mStreamScoreValues) {
                     sendOscDataEeg(eegData.getEegBand(), eegData.getPacketType());
                 }
             } else if (data instanceof MuseSensor.MuseArtifactDataFrame) {
@@ -291,6 +295,9 @@ public class BleService extends Service {
             Log.d(TAG, "New " + type + " score: " + values[ScoreMeasure.RENYI.ordinal()]);
             //Log.d(TAG, "New " + type + " score: " + Arrays.toString(values));
             mScoreCallback.onNewAverageScores(type, values, timestamp);
+            if (mStreamingEnabled && mStreamScoreValues) {
+                sendOscDataScores(type, values[ScoreMeasure.RENYI.ordinal()]);
+            }
         }
 
         @Override
@@ -312,6 +319,29 @@ public class BleService extends Service {
                         }
                         msg.addArgument((float) eegValues[i]);
                     }
+                    mOscPortOut.send(msg);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    private synchronized void sendOscDataScores(final ScoreType type, final double scoreValue) {
+        mThreadPoolExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                OSCMessage msg;
+                if (type ==ScoreType.FOCUS) {
+                    msg = new OSCMessage(ADDRESS_FOCUS);
+                } else {
+                    msg = new OSCMessage(ADDRESS_RELAX);
+                }
+                try {
+                    if (Float.isNaN((float) scoreValue)) {
+                        return;
+                    }
+                    msg.addArgument(scoreValue);
                     mOscPortOut.send(msg);
                 } catch (IOException e) {
                     e.printStackTrace();

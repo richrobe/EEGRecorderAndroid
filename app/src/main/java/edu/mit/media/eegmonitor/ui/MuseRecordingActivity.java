@@ -271,7 +271,7 @@ public class MuseRecordingActivity extends BaseActivity implements View.OnClickL
         int port = Integer.parseInt(sp.getString(getString(R.string.pref_port), "5000"));
         Log.d(TAG, "address: " + ipAddress + ", port: " + port);
         if (mService != null) {
-            mService.setStreamingEnabled(sp.getBoolean(getString(R.string.pref_enable_streaming), true));
+            mService.setStreamingEnabled(sp.getBoolean(getString(R.string.pref_enable_streaming), true), sp.getBoolean(getString(R.string.pref_streaming_type), false));
             mService.setDestinationAddress(ipAddress, port);
         }
     }

@@ -30,15 +30,24 @@
 
 
     <string name="pref_category_streaming">Streaming Settings</string>
-    <string name="pref_summary_enable_streaming">Enable/disable data streaming over the network</string>
+
     <string name="pref_title_streaming">Streaming</string>
-    <string name="pref_summary_address">IP address or host name of the server receiving the data (current: %1$s)</string>
+    <string name="pref_title_streaming_type">Streaming Type</string>
     <string name="pref_title_address">Server address</string>
     <string name="pref_title_port">Port</string>
+
+    <string name="pref_summary_enable_streaming">Enable/disable data streaming over the network</string>
+    <string name="pref_summary_streaming_type_off">Stream Raw values</string>
+    <string name="pref_summary_streaming_type_on">Stream Score values</string>
+    <string name="pref_summary_address">IP address or host name of the server receiving the data (current: %1$s)</string>
     <string name="pref_summary_port">Server port (current: %1$s)</string>
+
     <string name="pref_enable_streaming">pref_enable_streaming</string>
+    <string name="pref_streaming_type">pref_streaming_type</string>
     <string name="pref_address">pref_address</string>
-    <string name="pref_port">pref_hello</string>
+    <string name="pref_port">pref_port</string>
+
     <string name="empty_string">Empty</string>
+
 
 </resources>
