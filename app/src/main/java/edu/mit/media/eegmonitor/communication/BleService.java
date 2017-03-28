@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 import de.fau.sensorlib.DsSensor;
 import de.fau.sensorlib.DsSensorManager;
+import de.fau.sensorlib.KnownSensor;
 import de.fau.sensorlib.SensorDataProcessor;
 import de.fau.sensorlib.SensorFoundCallback;
 import de.fau.sensorlib.SensorInfo;
@@ -106,7 +107,13 @@ public class BleService extends Service {
             public void run() {
                 DsSensorManager.cancelRunningScans();
                 if (mMuseSensor == null) {
-                    mActivityCallback.onScanResult(null, false);
+                    SensorInfo museInfo = DsSensorManager.getFirstConnectableSensor(KnownSensor.MUSE);
+                    if (museInfo == null) {
+                        mActivityCallback.onScanResult(null, false);
+                    } else {
+
+                        mMuseSensor = new MuseSensor(BleService.this, museInfo, mMuseDataProcessor);
+                    }
                 }
             }
         }, 10000);
@@ -261,7 +268,6 @@ public class BleService extends Service {
                                 eegData.getEegBand(), eegData.getTimestamp(), null);
                         break;
                 }
-
                 if (mStreamingEnabled && !mStreamScoreValues) {
                     sendOscDataEeg(eegData.getEegBand(), eegData.getPacketType());
                 }
@@ -293,7 +299,6 @@ public class BleService extends Service {
         @Override
         public void onNewAverageScores(ScoreType type, double[] values, double timestamp) {
             Log.d(TAG, "New " + type + " score: " + values[ScoreMeasure.RENYI.ordinal()]);
-            //Log.d(TAG, "New " + type + " score: " + Arrays.toString(values));
             mScoreCallback.onNewAverageScores(type, values, timestamp);
             if (mStreamingEnabled && mStreamScoreValues) {
                 sendOscDataScores(type, values[ScoreMeasure.RENYI.ordinal()]);
@@ -321,7 +326,7 @@ public class BleService extends Service {
                     }
                     mOscPortOut.send(msg);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    //e.printStackTrace();
                 }
             }
         });
@@ -332,7 +337,7 @@ public class BleService extends Service {
             @Override
             public void run() {
                 OSCMessage msg;
-                if (type ==ScoreType.FOCUS) {
+                if (type == ScoreType.FOCUS) {
                     msg = new OSCMessage(ADDRESS_FOCUS);
                 } else {
                     msg = new OSCMessage(ADDRESS_RELAX);
@@ -344,7 +349,7 @@ public class BleService extends Service {
                     msg.addArgument(scoreValue);
                     mOscPortOut.send(msg);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    //e.printStackTrace();
                 }
             }
         });
@@ -358,13 +363,14 @@ public class BleService extends Service {
                     OSCMessage msgBlink = new OSCMessage(ADDRESS_BLINK);
                     msgBlink.addArgument(1);
                     OSCMessage msgBlinkRate = new OSCMessage(ADDRESS_BLINK_RATE);
+                    if (Double.isNaN(blinkrate)) {
+                        return;
+                    }
                     msgBlinkRate.addArgument(blinkrate);
                     mOscPortOut.send(msgBlink);
                     mOscPortOut.send(msgBlinkRate);
-                    Log.e(TAG, String.valueOf(msgBlink.getArguments()));
-                    Log.e(TAG, String.valueOf(msgBlinkRate.getArguments()));
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    //e.printStackTrace();
                 }
             }
         });

@@ -53,7 +53,7 @@ public class EegScoreProcessor {
 
     private static final String TAG = EegScoreProcessor.class.getSimpleName();
     private static final int LEARNING_TIME = 3 * 60 * 1000;
-    private static final int WINDOW_SIZE = 20;
+    private static final int WINDOW_SIZE = 30;
     private static final int ENTROPIC_INDEX = 3;
 
     private static double MAX_SHANNON = 0.0;
@@ -186,7 +186,8 @@ public class EegScoreProcessor {
         // if quality indicator available: check if signal quality in required channels sufficient
         if (quality != null) {
             for (Eeg eeg : Eeg.values()) {
-                if (quality[eeg.ordinal()] != 1) {
+                if (quality[eeg.ordinal()] > 2) {
+                    Log.v(TAG, "no quality");
                     return;
                 }
             }
@@ -218,9 +219,14 @@ public class EegScoreProcessor {
         for (int i = 0; i < mEegBands.length; i++) {
             for (int j = 0; j < mChannels.length; j++) {
                 double val = mTempValues[i][j];
-                mEegQuantiles[i][j][0].next(val);
-                mEegQuantiles[i][j][1].next(val);
-                mEegRingbuffer[i][j][rowCounter % WINDOW_SIZE] = val;
+                if (Double.isNaN(val)) {
+                    Log.v(TAG, "Data NaN");
+                    break;
+                } else {
+                    mEegQuantiles[i][j][0].next(val);
+                    mEegQuantiles[i][j][1].next(val);
+                    mEegRingbuffer[i][j][rowCounter % WINDOW_SIZE] = val;
+                }
             }
         }
         rowCounter++;
@@ -258,8 +264,8 @@ public class EegScoreProcessor {
             for (int j = 0; j < mChannels.length; j++) {
                 double meanVal = Stats.meanOf(mEegRingbuffer[i][j]);
                 double normVal = normalize(meanVal, mEegQuantiles[i][j][0].getP(), mEegQuantiles[i][j][1].getP());
-                if (normVal < 0.0 || normVal > 1.0) {
-                    Log.i(TAG, mScoreType + " out of range");
+                if (normVal < (-1.0 * 10E-5) || normVal > (1.0 + 1.0 * 10E-5)) {
+                    Log.i(TAG, mScoreType + " out of range: " + normVal);
                     return;
                 }
                 normVals[i][j] = normVal;
