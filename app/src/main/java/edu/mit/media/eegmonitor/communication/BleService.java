@@ -13,7 +13,6 @@ import com.choosemuse.libmuse.MuseDataPacketType;
 import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPortOut;
 
-import java.io.IOException;
 import java.net.InetAddress;
 import java.util.EnumSet;
 import java.util.concurrent.BlockingQueue;
@@ -35,6 +34,8 @@ import edu.mit.media.eegmonitor.dataprocessing.EegScoreProcessor;
 import edu.mit.media.eegmonitor.dataprocessing.EegScoreProcessor.ScoreMeasure;
 import edu.mit.media.eegmonitor.dataprocessing.EegScoreProcessor.ScoreType;
 
+import static edu.mit.media.eegmonitor.dataprocessing.EegScoreProcessor.*;
+
 public class BleService extends Service {
 
     private static final String TAG = BleService.class.getSimpleName();
@@ -49,6 +50,7 @@ public class BleService extends Service {
     private static final String ADDRESS_RELAX = "/eeg/relax_score";
     private static final String ADDRESS_FOCUS = "/eeg_focus_score";
     private OSCPortOut mOscPortOut;
+    //private OscClient mOscClient;
     private boolean mStreamingEnabled;
     private boolean mStreamScoreValues;
 
@@ -85,60 +87,20 @@ public class BleService extends Service {
 
     private DsSensor mMuseSensor;
     private MuseDataProcessor mMuseDataProcessor = new MuseDataProcessor();
-    private EegScoreProcessor.EegScoreListener mScoreCallback;
+    private EegScoreCallback mScoreCallback;
 
     public void setSensorActivityCallback(SensorActivityCallback callback) {
         mActivityCallback = callback;
     }
 
-    public void setScoreCallback(EegScoreProcessor.EegScoreListener callback) {
+    public void setScoreCallback(EegScoreCallback callback) {
         mScoreCallback = callback;
     }
 
     public void startMuse() {
         try {
             DsSensorManager.searchBleDevices(mSensorFoundCallback);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                DsSensorManager.cancelRunningScans();
-                if (mMuseSensor == null) {
-                    SensorInfo museInfo = DsSensorManager.getFirstConnectableSensor(KnownSensor.MUSE);
-                    if (museInfo == null) {
-                        mActivityCallback.onScanResult(null, false);
-                    } else {
-
-                        mMuseSensor = new MuseSensor(BleService.this, museInfo, mMuseDataProcessor);
-                    }
-                }
-            }
-        }, 10000);
-    }
-
-    public void stopMuse() {
-        if (mMuseSensor != null) {
-            mMuseSensor.stopStreaming();
-            mMuseSensor.disconnect();
-            mMuseSensor = null;
-        }
-    }
-
-    public MuseDataProcessor getMuseDataProcessor() {
-        return mMuseDataProcessor;
-    }
-
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        Log.d(TAG, "Service bond!");
-
-        try {
             mOscPortOut = new AsyncTask<Void, Void, OSCPortOut>() {
-
                 @Override
                 protected OSCPortOut doInBackground(Void... params) {
                     try {
@@ -153,6 +115,41 @@ public class BleService extends Service {
             e.printStackTrace();
         }
 
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                DsSensorManager.cancelRunningScans();
+                if (mMuseSensor == null) {
+                    SensorInfo museInfo = DsSensorManager.getFirstConnectableSensor(KnownSensor.MUSE);
+                    if (museInfo == null) {
+                        mActivityCallback.onScanResult(null, false);
+                    } else {
+                        mMuseSensor = new MuseSensor(BleService.this, museInfo, mMuseDataProcessor);
+                    }
+                }
+            }
+        }, 10000);
+    }
+
+    public void stopMuse() {
+        if (mMuseSensor != null) {
+            mMuseSensor.stopStreaming();
+            mMuseSensor.disconnect();
+            mMuseSensor = null;
+        }
+        if (mOscPortOut != null) {
+            mOscPortOut.close();
+        }
+    }
+
+    public MuseDataProcessor getMuseDataProcessor() {
+        return mMuseDataProcessor;
+    }
+
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        Log.d(TAG, "Service bond!");
         mThreadPoolExecutor = new ThreadPoolExecutor(NUMBER_OF_CORES, NUMBER_OF_CORES, KEEP_ALIVE_TIME, KEEP_ALIVE_TIME_UNIT, mSendQueue);
 
         return mBinder;
@@ -188,7 +185,7 @@ public class BleService extends Service {
         }
     }
 
-    public class MuseDataProcessor extends SensorDataProcessor implements EegScoreProcessor.EegScoreListener {
+    public class MuseDataProcessor extends SensorDataProcessor implements EegScoreCallback{
 
         private BlinkRateProcessor mBlinkRateProcessor;
         private EegScoreProcessor mFocusScoreProcessor;
@@ -312,10 +309,11 @@ public class BleService extends Service {
     }
 
 
-    private synchronized void sendOscDataEeg(final double[] eegValues, final MuseDataPacketType packetType) {
+    private void sendOscDataEeg(final double[] eegValues, final MuseDataPacketType packetType) {
         mThreadPoolExecutor.execute(new Runnable() {
             @Override
             public void run() {
+                //OscMessage msg = new OscMessage(ADDRESS_EEG + packetType.name().toLowerCase());
                 OSCMessage msg = new OSCMessage(ADDRESS_EEG + packetType.name().toLowerCase());
                 try {
                     for (int i = 0; i < 4; i++) {
@@ -324,19 +322,20 @@ public class BleService extends Service {
                         }
                         msg.addArgument((float) eegValues[i]);
                     }
+                    //mOscClient.sendPacket(msg);
                     mOscPortOut.send(msg);
-                } catch (IOException e) {
-                    //e.printStackTrace();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         });
     }
 
-    private synchronized void sendOscDataScores(final ScoreType type, final double scoreValue) {
+    private void sendOscDataScores(final ScoreType type, final double scoreValue) {
         mThreadPoolExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                OSCMessage msg;
+                /*OSCMessage msg;
                 if (type == ScoreType.FOCUS) {
                     msg = new OSCMessage(ADDRESS_FOCUS);
                 } else {
@@ -349,17 +348,17 @@ public class BleService extends Service {
                     msg.addArgument(scoreValue);
                     mOscPortOut.send(msg);
                 } catch (IOException e) {
-                    //e.printStackTrace();
-                }
+                    e.printStackTrace();
+                }*/
             }
         });
     }
 
-    private synchronized void sendOscDataBlink(final double blinkrate) {
+    private void sendOscDataBlink(final double blinkrate) {
         mThreadPoolExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                try {
+                /*try {
                     OSCMessage msgBlink = new OSCMessage(ADDRESS_BLINK);
                     msgBlink.addArgument(1);
                     OSCMessage msgBlinkRate = new OSCMessage(ADDRESS_BLINK_RATE);
@@ -371,7 +370,7 @@ public class BleService extends Service {
                     mOscPortOut.send(msgBlinkRate);
                 } catch (IOException e) {
                     //e.printStackTrace();
-                }
+                }*/
             }
         });
     }

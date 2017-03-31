@@ -16,7 +16,7 @@ public class EegScoreProcessor {
     /**
      *
      */
-    public interface EegScoreListener {
+    public interface EegScoreCallback {
 
         /**
          * Callback when new current Scores are available
@@ -60,7 +60,7 @@ public class EegScoreProcessor {
     private static double MAX_RENYI = 0.0;
 
 
-    private EegScoreListener mListener;
+    private EegScoreCallback mCallback;
 
     /**
      * Score type for this processor instance
@@ -139,9 +139,9 @@ public class EegScoreProcessor {
     private double[][] mScoreRingbuffer;
 
 
-    public EegScoreProcessor(Eeg[] channels, MuseDataPacketType[] eegBands, ScoreType type, EegScoreListener listener) {
+    public EegScoreProcessor(Eeg[] channels, MuseDataPacketType[] eegBands, ScoreType type, EegScoreCallback callback) {
 
-        mListener = listener;
+        mCallback = callback;
         mChannels = channels;
         mEegBands = eegBands;
         mScoreType = type;
@@ -241,18 +241,18 @@ public class EegScoreProcessor {
             } catch (Exception e) {
                 Log.e(TAG, e.toString());
             }
-            if (mListener != null) {
-                mListener.onNewCurrentScores(mScoreType, mCurrScores, mCurrentTimestamp);
-                mListener.onNewAverageScores(mScoreType, mAvgScores, mCurrentTimestamp);
+            if (mCallback != null) {
+                mCallback.onNewCurrentScores(mScoreType, mCurrScores, mCurrentTimestamp);
+                mCallback.onNewAverageScores(mScoreType, mAvgScores, mCurrentTimestamp);
             }
         }
     }
 
     private void classify() {
         if (mAvgScores[ScoreMeasure.RENYI.ordinal()] >= mScoreQuantiles[ScoreMeasure.RENYI.ordinal()].getP()) {
-            mListener.onNewClassification(mScoreType, true, mCurrentTimestamp);
+            mCallback.onNewClassification(mScoreType, true, mCurrentTimestamp);
         } else {
-            mListener.onNewClassification(mScoreType, false, mCurrentTimestamp);
+            mCallback.onNewClassification(mScoreType, false, mCurrentTimestamp);
         }
     }
 

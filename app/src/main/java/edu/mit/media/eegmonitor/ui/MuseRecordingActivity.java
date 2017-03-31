@@ -34,10 +34,13 @@ import de.fau.sensorlib.sensors.MuseSensor;
 import edu.mit.media.eegmonitor.R;
 import edu.mit.media.eegmonitor.SensorActivityCallback;
 import edu.mit.media.eegmonitor.communication.BleService;
-import edu.mit.media.eegmonitor.dataprocessing.EegScoreProcessor;
+
+import static edu.mit.media.eegmonitor.dataprocessing.EegScoreProcessor.EegScoreCallback;
+import static edu.mit.media.eegmonitor.dataprocessing.EegScoreProcessor.ScoreMeasure;
+import static edu.mit.media.eegmonitor.dataprocessing.EegScoreProcessor.ScoreType;
 
 public class MuseRecordingActivity extends BaseActivity implements View.OnClickListener,
-        ServiceConnection, SensorActivityCallback, EegScoreProcessor.EegScoreListener {
+        ServiceConnection, SensorActivityCallback, EegScoreCallback {
 
     private static final String TAG = MuseRecordingActivity.class.getSimpleName();
 
@@ -54,7 +57,6 @@ public class MuseRecordingActivity extends BaseActivity implements View.OnClickL
     private Plot mBetaBandPlot;
     private Plot mGammaBandPlot;
     private Plot mThetaBandPlot;
-    // TODO not used yet
     private PlotView mEegScoresPlotView;
     private Plot mFocusScorePlot;
     private Plot mRelaxScorePlot;
@@ -69,8 +71,8 @@ public class MuseRecordingActivity extends BaseActivity implements View.OnClickL
     /**
      * Boolean indicating if Muse device is streaming and if the Pause Button is clicked.
      */
-    boolean mStreaming;
-    boolean mConnected;
+    private boolean mStreaming;
+    private boolean mConnected;
 
     protected BleService mService;
     protected Intent mServiceIntent;
@@ -398,13 +400,13 @@ public class MuseRecordingActivity extends BaseActivity implements View.OnClickL
     }
 
     @Override
-    public void onNewCurrentScores(EegScoreProcessor.ScoreType type, double[] values, double timestamp) {
+    public void onNewCurrentScores(ScoreType type, double[] values, double timestamp) {
 
     }
 
     @Override
-    public void onNewAverageScores(EegScoreProcessor.ScoreType type, double[] values, double timestamp) {
-        double scoreVal = values[EegScoreProcessor.ScoreMeasure.RENYI.ordinal()];
+    public void onNewAverageScores(ScoreType type, double[] values, double timestamp) {
+        double scoreVal = values[ScoreMeasure.RENYI.ordinal()];
         if (!Double.isNaN(scoreVal)) {
             switch (type) {
                 case FOCUS:
@@ -420,7 +422,7 @@ public class MuseRecordingActivity extends BaseActivity implements View.OnClickL
     }
 
     @Override
-    public void onNewClassification(EegScoreProcessor.ScoreType type, boolean stateReached, double timestamp) {
+    public void onNewClassification(ScoreType type, boolean stateReached, double timestamp) {
 
     }
 }
