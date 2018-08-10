@@ -27,9 +27,9 @@ import de.fau.lme.plotview.Plot;
 import de.fau.lme.plotview.PlotView;
 import de.fau.lme.plotview.SamplingPlot;
 import de.fau.lme.widgets.StatusBar;
-import de.fau.sensorlib.DsSensor;
-import de.fau.sensorlib.DsSensorManager;
+import de.fau.sensorlib.BleSensorManager;
 import de.fau.sensorlib.dataframe.SensorDataFrame;
+import de.fau.sensorlib.sensors.AbstractSensor;
 import de.fau.sensorlib.sensors.MuseSensor;
 import edu.mit.media.eegmonitor.R;
 import edu.mit.media.eegmonitor.SensorActivityCallback;
@@ -154,8 +154,8 @@ public class MuseRecordingActivity extends BaseActivity implements View.OnClickL
         super.onResume();
         checkPreferenceUpdates();
         try {
-            DsSensorManager.enableBluetooth(this);
-            DsSensorManager.checkBtLePermissions(this, true);
+            BleSensorManager.enableBluetooth(this);
+            BleSensorManager.checkBtLePermissions(this, true);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -307,7 +307,7 @@ public class MuseRecordingActivity extends BaseActivity implements View.OnClickL
     }
 
     @Override
-    public void onScanResult(DsSensor sensor, boolean sensorFound) {
+    public void onScanResult(AbstractSensor sensor, boolean sensorFound) {
         if (!sensorFound) {
             Log.d(TAG, "No sensors found...");
             mStopButton.performClick();
@@ -317,36 +317,36 @@ public class MuseRecordingActivity extends BaseActivity implements View.OnClickL
     }
 
     @Override
-    public void onStartStreaming(DsSensor sensor) {
+    public void onStartStreaming(AbstractSensor sensor) {
         mFab.performClick();
         mStreaming = true;
         clearUi();
     }
 
     @Override
-    public void onStopStreaming(DsSensor sensor) {
+    public void onStopStreaming(AbstractSensor sensor) {
         mStreaming = false;
     }
 
     @Override
-    public void onMessageReceived(DsSensor sensor, Object... message) {
+    public void onMessageReceived(AbstractSensor sensor, Object... message) {
 
     }
 
     @Override
-    public void onSensorConnected(DsSensor sensor) {
+    public void onSensorConnected(AbstractSensor sensor) {
         mConnected = true;
         mStatusBar.setStatus(StatusBar.STATUS_CONNECTED);
     }
 
     @Override
-    public void onSensorDisconnected(DsSensor sensor) {
+    public void onSensorDisconnected(AbstractSensor sensor) {
         mConnected = false;
         mStatusBar.setStatus(StatusBar.STATUS_DISCONNECTED);
     }
 
     @Override
-    public void onSensorConnectionLost(DsSensor sensor) {
+    public void onSensorConnectionLost(AbstractSensor sensor) {
         mConnected = false;
         mStopButton.performClick();
         mFab.performClick();
@@ -355,7 +355,7 @@ public class MuseRecordingActivity extends BaseActivity implements View.OnClickL
     }
 
     @Override
-    public void onDataReceived(DsSensor sensor, SensorDataFrame data) {
+    public void onDataReceived(AbstractSensor sensor, SensorDataFrame data) {
         if (data instanceof MuseSensor.MuseEegDataFrame) {
             MuseSensor.MuseEegDataFrame eegData = (MuseSensor.MuseEegDataFrame) data;
             long timestamp = (long) eegData.getTimestamp();

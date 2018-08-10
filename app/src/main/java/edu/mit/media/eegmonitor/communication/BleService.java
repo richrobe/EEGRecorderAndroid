@@ -20,13 +20,14 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import de.fau.sensorlib.DsSensor;
-import de.fau.sensorlib.DsSensorManager;
-import de.fau.sensorlib.KnownSensor;
+import de.fau.sensorlib.BleSensorManager;
 import de.fau.sensorlib.SensorDataProcessor;
 import de.fau.sensorlib.SensorFoundCallback;
 import de.fau.sensorlib.SensorInfo;
 import de.fau.sensorlib.dataframe.SensorDataFrame;
+import de.fau.sensorlib.enums.HardwareSensor;
+import de.fau.sensorlib.enums.KnownSensor;
+import de.fau.sensorlib.sensors.AbstractSensor;
 import de.fau.sensorlib.sensors.MuseSensor;
 import edu.mit.media.eegmonitor.SensorActivityCallback;
 import edu.mit.media.eegmonitor.dataprocessing.BlinkRateProcessor;
@@ -34,7 +35,7 @@ import edu.mit.media.eegmonitor.dataprocessing.EegScoreProcessor;
 import edu.mit.media.eegmonitor.dataprocessing.EegScoreProcessor.ScoreMeasure;
 import edu.mit.media.eegmonitor.dataprocessing.EegScoreProcessor.ScoreType;
 
-import static edu.mit.media.eegmonitor.dataprocessing.EegScoreProcessor.*;
+import static edu.mit.media.eegmonitor.dataprocessing.EegScoreProcessor.EegScoreCallback;
 
 public class BleService extends Service {
 
@@ -85,7 +86,7 @@ public class BleService extends Service {
     private SensorActivityCallback mActivityCallback;
 
 
-    private DsSensor mMuseSensor;
+    private AbstractSensor mMuseSensor;
     private MuseDataProcessor mMuseDataProcessor = new MuseDataProcessor();
     private EegScoreCallback mScoreCallback;
 
@@ -99,7 +100,7 @@ public class BleService extends Service {
 
     public void startMuse() {
         try {
-            DsSensorManager.searchBleDevices(mSensorFoundCallback);
+            BleSensorManager.searchBleDevices(mSensorFoundCallback);
             mOscPortOut = new AsyncTask<Void, Void, OSCPortOut>() {
                 @Override
                 protected OSCPortOut doInBackground(Void... params) {
@@ -118,9 +119,9 @@ public class BleService extends Service {
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                DsSensorManager.cancelRunningScans();
+                BleSensorManager.cancelRunningScans();
                 if (mMuseSensor == null) {
-                    SensorInfo museInfo = DsSensorManager.getFirstConnectableSensor(KnownSensor.MUSE);
+                    SensorInfo museInfo = BleSensorManager.getFirstConnectableSensor(KnownSensor.MUSE);
                     if (museInfo == null) {
                         mActivityCallback.onScanResult(null, false);
                     } else {
@@ -157,7 +158,7 @@ public class BleService extends Service {
 
     @Override
     public boolean onUnbind(Intent intent) {
-        DsSensorManager.cancelRunningScans();
+        BleSensorManager.cancelRunningScans();
         mBinder = null;
         mSensorFoundCallback = null;
         return false;
@@ -185,18 +186,18 @@ public class BleService extends Service {
         }
     }
 
-    public class MuseDataProcessor extends SensorDataProcessor implements EegScoreCallback{
+    public class MuseDataProcessor extends SensorDataProcessor implements EegScoreCallback {
 
         private BlinkRateProcessor mBlinkRateProcessor;
         private EegScoreProcessor mFocusScoreProcessor;
         private EegScoreProcessor mRelaxScoreProcessor;
 
         @Override
-        public void onSensorCreated(DsSensor sensor) {
+        public void onSensorCreated(AbstractSensor sensor) {
             super.onSensorCreated(sensor);
             mActivityCallback.onScanResult(sensor, true);
             try {
-                sensor.useHardwareSensors(EnumSet.of(DsSensor.HardwareSensor.EEG_FREQ_BANDS));
+                sensor.useHardwareSensors(EnumSet.of(HardwareSensor.EEG_FREQ_BANDS));
                 sensor.connect();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -204,7 +205,7 @@ public class BleService extends Service {
         }
 
         @Override
-        public void onConnected(DsSensor sensor) {
+        public void onConnected(AbstractSensor sensor) {
             super.onConnected(sensor);
             mActivityCallback.onSensorConnected(sensor);
             ((MuseSensor) sensor).shouldUseArtifactSensor(true);
@@ -212,20 +213,20 @@ public class BleService extends Service {
         }
 
         @Override
-        public void onDisconnected(DsSensor sensor) {
+        public void onDisconnected(AbstractSensor sensor) {
             super.onDisconnected(sensor);
             mActivityCallback.onSensorDisconnected(sensor);
             mMuseSensor = null;
         }
 
         @Override
-        public void onConnectionLost(DsSensor sensor) {
+        public void onConnectionLost(AbstractSensor sensor) {
             super.onConnectionLost(sensor);
             mActivityCallback.onSensorConnectionLost(sensor);
         }
 
         @Override
-        public void onStartStreaming(DsSensor sensor) {
+        public void onStartStreaming(AbstractSensor sensor) {
             super.onStartStreaming(sensor);
             mActivityCallback.onStartStreaming(sensor);
             mBlinkRateProcessor = new BlinkRateProcessor(System.currentTimeMillis());
@@ -236,14 +237,14 @@ public class BleService extends Service {
         }
 
         @Override
-        public void onStopStreaming(DsSensor sensor) {
+        public void onStopStreaming(AbstractSensor sensor) {
             super.onStopStreaming(sensor);
             sensor.disconnect();
             mActivityCallback.onStopStreaming(sensor);
         }
 
         @Override
-        public void onNotify(DsSensor sensor, Object notification) {
+        public void onNotify(AbstractSensor sensor, Object notification) {
             Log.d(TAG, "onNotify: " + notification);
             super.onNotify(sensor, notification);
         }
